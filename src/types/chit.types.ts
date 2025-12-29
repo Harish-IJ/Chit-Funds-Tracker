@@ -67,6 +67,8 @@ export interface Participant {
   chitId: string;
   role: ParticipantRole;
   status: ParticipantStatus;
+  mobile?: string;
+  address?: string;
   joinedMonthNumber?: number; // If joined mid-cycle
 }
 

@@ -39,10 +39,16 @@ interface AddMonthDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultChitId?: string;
+  editMonth?: ChitMonth;
 }
 
-export function AddMonthDialog({ open, onOpenChange, defaultChitId }: AddMonthDialogProps) {
-  const { data, addChitMonth } = useChitFund();
+export function AddMonthDialog({
+  open,
+  onOpenChange,
+  defaultChitId,
+  editMonth,
+}: AddMonthDialogProps) {
+  const { data, addChitMonth, updateChitMonth } = useChitFund();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<AddMonthFormData>({
@@ -65,15 +71,37 @@ export function AddMonthDialog({ open, onOpenChange, defaultChitId }: AddMonthDi
     (p) => p.chitId === selectedChitId && p.status === "active"
   );
 
-  // Auto-suggest next month number
+  // Auto-suggest next month number (only when NOT editing)
   useEffect(() => {
+    if (editMonth) return; // Skip when editing
     if (selectedChitId && chitMonths.length > 0) {
       const maxMonth = Math.max(...chitMonths.map((m) => m.monthNumber));
       form.setValue("monthNumber", maxMonth + 1);
     } else if (selectedChitId) {
       form.setValue("monthNumber", 1);
     }
-  }, [selectedChitId, chitMonths, form]);
+  }, [selectedChitId, chitMonths, form, editMonth]);
+
+  // Pre-populate form when editing
+  useEffect(() => {
+    if (editMonth && open) {
+      form.reset({
+        chitId: editMonth.chitId,
+        monthNumber: editMonth.monthNumber,
+        type: editMonth.type,
+        auctionAmount: editMonth.auctionAmount,
+        winnerParticipantId: editMonth.winnerParticipantId || "",
+      });
+    } else if (open && !editMonth) {
+      form.reset({
+        chitId: defaultChitId || "",
+        monthNumber: 1,
+        type: "auction",
+        auctionAmount: undefined,
+        winnerParticipantId: "",
+      });
+    }
+  }, [editMonth, open, defaultChitId, form]);
 
   const onSubmit = async (formData: AddMonthFormData) => {
     setIsSubmitting(true);
@@ -87,8 +115,10 @@ export function AddMonthDialog({ open, onOpenChange, defaultChitId }: AddMonthDi
         throw new Error(`Month number cannot exceed ${selectedChit.durationMonths}`);
       }
 
-      // Check for duplicate month
-      const existingMonth = chitMonths.find((m) => m.monthNumber === formData.monthNumber);
+      // Check for duplicate month (skip if editing same month)
+      const existingMonth = chitMonths.find(
+        (m) => m.monthNumber === formData.monthNumber && m.id !== editMonth?.id
+      );
       if (existingMonth) {
         throw new Error(`Month ${formData.monthNumber} already exists`);
       }
@@ -98,24 +128,32 @@ export function AddMonthDialog({ open, onOpenChange, defaultChitId }: AddMonthDi
         throw new Error("Auction amount must be less than scheme value");
       }
 
-      const newMonth: ChitMonth = {
-        id: generateId("month"),
-        chitId: formData.chitId,
-        monthNumber: formData.monthNumber,
-        type: formData.type,
-        ...(formData.type === "auction" && {
-          auctionAmount: formData.auctionAmount!,
-          winnerParticipantId: formData.winnerParticipantId!,
-        }),
-      };
+      if (editMonth) {
+        // Update existing month
+        updateChitMonth(editMonth.id, {
+          type: formData.type,
+          ...(formData.type === "auction" && {
+            auctionAmount: formData.auctionAmount!,
+            winnerParticipantId: formData.winnerParticipantId!,
+          }),
+        });
+        toast.success(`Month ${formData.monthNumber} updated successfully`);
+      } else {
+        // Create new month
+        const newMonth: ChitMonth = {
+          id: generateId("month"),
+          chitId: formData.chitId,
+          monthNumber: formData.monthNumber,
+          type: formData.type,
+          ...(formData.type === "auction" && {
+            auctionAmount: formData.auctionAmount!,
+            winnerParticipantId: formData.winnerParticipantId!,
+          }),
+        };
 
-      addChitMonth(newMonth);
-
-      toast.success(
-        `Month added! ${formData.type === "auction" ? "Auction" : "Company"} month ${
-          formData.monthNumber
-        } added to ${selectedChit.name || selectedChit.id}`
-      );
+        addChitMonth(newMonth);
+        toast.success(`Month ${formData.monthNumber} added successfully`);
+      }
 
       form.reset({
         chitId: defaultChitId || "",
@@ -126,7 +164,7 @@ export function AddMonthDialog({ open, onOpenChange, defaultChitId }: AddMonthDi
       });
       onOpenChange(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to add month");
+      toast.error(error instanceof Error ? error.message : "Failed to save month");
     } finally {
       setIsSubmitting(false);
     }
@@ -136,7 +174,7 @@ export function AddMonthDialog({ open, onOpenChange, defaultChitId }: AddMonthDi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add Month</DialogTitle>
+          <DialogTitle>{editMonth ? "Edit Month" : "Add Month"}</DialogTitle>
           <DialogDescription>
             Create a new auction or company month for a chit fund.
           </DialogDescription>

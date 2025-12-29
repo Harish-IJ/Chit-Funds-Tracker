@@ -51,6 +51,7 @@ const saveData = async (data: ChitFundData): Promise<void> => {
 
 interface ChitFundContextType {
   data: ChitFundData;
+  isLoading: boolean;
 
   // Chits
   addChit: (chit: Chit) => void;
@@ -279,6 +280,7 @@ export function ChitFundProvider({ children }: { children: React.ReactNode }) {
     <ChitFundContext.Provider
       value={{
         data,
+        isLoading,
         addChit,
         updateChit,
         deleteChit,

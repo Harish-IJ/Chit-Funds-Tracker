@@ -32,12 +32,14 @@ import { useTheme } from "@/providers/theme-provider";
 import { cn } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronRight } from "lucide-react";
+import { CsvImportDialog } from "./dialogs/CsvImportDialog";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation();
   const { data, exportData, importData } = useChitFund();
   const { theme, setTheme } = useTheme();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [csvImportOpen, setCsvImportOpen] = React.useState(false);
 
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -50,7 +52,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         importData(jsonData);
         // Show success toast using sonner
         import("sonner").then(({ toast }) => toast.success("Data imported successfully!"));
-      } catch (error) {
+      } catch {
         import("sonner").then(({ toast }) =>
           toast.error("Failed to import data. Invalid JSON file.")
         );
@@ -251,6 +253,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
+      <CsvImportDialog open={csvImportOpen} onOpenChange={setCsvImportOpen} />
     </Sidebar>
   );
 }

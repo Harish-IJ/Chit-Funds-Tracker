@@ -17,6 +17,8 @@ export const addParticipantSchema = z.object({
   chitId: z.string().min(1, "Please select a chit fund"),
   role: z.enum(["external", "internal", "company"]),
   status: z.enum(["active", "inactive", "won"]),
+  mobile: z.string().optional(),
+  address: z.string().optional(),
 });
 
 export type AddParticipantFormData = z.infer<typeof addParticipantSchema>;

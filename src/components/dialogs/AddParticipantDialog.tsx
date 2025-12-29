@@ -18,6 +18,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -53,6 +54,8 @@ export function AddParticipantDialog({
       chitId: defaultChitId || "",
       role: "external",
       status: "active",
+      mobile: "",
+      address: "",
     },
   });
 
@@ -78,6 +81,8 @@ export function AddParticipantDialog({
         chitId: formData.chitId,
         role: formData.role,
         status: formData.status,
+        mobile: formData.mobile || undefined,
+        address: formData.address || undefined,
       };
 
       addParticipant(newParticipant);
@@ -91,6 +96,8 @@ export function AddParticipantDialog({
         chitId: defaultChitId || "",
         role: "external",
         status: "active",
+        mobile: "",
+        address: "",
       });
       onOpenChange(false);
     } catch (error) {
@@ -102,7 +109,7 @@ export function AddParticipantDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[450px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Add Participant</DialogTitle>
           <DialogDescription>Add a new participant to a chit fund.</DialogDescription>
@@ -118,6 +125,39 @@ export function AddParticipantDialog({
                   <FormLabel>Participant Name</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g., Rajesh Kumar" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="mobile"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Mobile Number</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., 9876543210" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Address</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Enter address..."
+                      className="resize-none"
+                      rows={2}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
